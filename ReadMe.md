@@ -1,4 +1,4 @@
-# RahulDemo - Portfolio Management App
+# RahulDemo - Grocery App
 
 A modern, robust Android application built with Jetpack Compose that demonstrates professional software engineering practices, including Clean Architecture, MVVM, and reactive programming.
 

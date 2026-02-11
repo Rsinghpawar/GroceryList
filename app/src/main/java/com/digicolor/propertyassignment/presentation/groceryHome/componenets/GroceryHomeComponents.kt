@@ -33,6 +33,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
@@ -138,9 +139,45 @@ fun CategoryItem(
 
 
 @Composable
+fun CategoryItemSmall(
+    modifier: Modifier = Modifier,
+    isSelected: Boolean,
+    category: GroceryCategory,
+    onTap: (() -> Unit)?
+) {
+    Row(
+        modifier = modifier
+            .background(
+                shape = RoundedCornerShape(50),
+                color = if (isSelected) Color.Blue else category.bgColorHex.toComposeColor()
+            )
+            .padding(vertical = 12.dp, horizontal = 6.dp)
+            .clickable {
+                onTap?.invoke()
+            },
+        horizontalArrangement = Arrangement.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Text(text = category.icon)
+            CategoryLabel(
+                category.name,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                textColor = category.textColorHex.toComposeColor()
+            )
+
+        }
+    }
+}
+
+
+@Composable
 fun GroceryTextField(
-    value: String,
-    onValueChange: (String) -> Unit,
+    value: TextFieldValue,
+    onValueChange: (TextFieldValue) -> Unit,
     placeholder: String,
     modifier: Modifier = Modifier
 ) {

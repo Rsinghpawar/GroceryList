@@ -1,7 +1,10 @@
 package com.digicolor.propertyassignment.presentation.groceryHome
 
+import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.digicolor.propertyassignment.domain.GroceryCategory
 import com.digicolor.propertyassignment.domain.GroceryItem
 import com.digicolor.propertyassignment.domain.usecases.AddGroceryItemUseCase
 import com.digicolor.propertyassignment.domain.usecases.GetCategoriesUseCase
@@ -42,7 +45,12 @@ class GroceryHomeScreenViewmodel @Inject constructor(
             getCategoriesUseCase().collect { categories ->
                 _groceryItemState.update {
                     it.copy(
-                        categoryList = categories
+                        categoryList = categories.filter { it.name!= DefaultCategories.All.name },
+                    )
+                }
+                _groceryListState.update {
+                    it.copy(
+                        categoryFilterList = categories
                     )
                 }
             }
@@ -58,11 +66,18 @@ class GroceryHomeScreenViewmodel @Inject constructor(
     }
 
     private fun observeGroceryList() {
+        clearAddState()
         viewModelScope.launch {
             observeGroceryListUseCase().collect { groceryItemList ->
-                _groceryListState.update {
-                    it.copy(
-                        groceryList = groceryItemList
+                _groceryListState.update { current ->
+                    val displayList = filterAndSort(
+                        groceryItemList,
+                        categoryFilter = current.selectedCatFilter,
+                        sortBy = current.sortBy
+                    )
+                    current.copy(
+                        groceryList = groceryItemList,
+                        displayList = displayList
                     )
                 }
             }
@@ -75,14 +90,7 @@ class GroceryHomeScreenViewmodel @Inject constructor(
                 viewModelScope.launch {
                     updateGroceryItemUseCase.deleteItem(uiAction.id)
                 }
-            }
-
-            is UiAction.OnEditItem -> {
-
-            }
-
-            is UiAction.OnMarkCompleted -> {
-
+                clearAddState()
             }
 
             is UiAction.OnAddNewItem -> {
@@ -92,14 +100,14 @@ class GroceryHomeScreenViewmodel @Inject constructor(
                             currentEditingItem?.let { item ->
                                 updateGroceryItemUseCase.updateItem(
                                     grocId = item.id,
-                                    name = _groceryItemState.value.title,
+                                    name = _groceryItemState.value.textFieldValue.text,
                                     categoryId = _groceryItemState.value.selectedCategory?.name
                                 )
                             }
 
                         } else {
                             addGroceryItemUseCase.invoke(
-                                _groceryItemState.value.title,
+                                _groceryItemState.value.textFieldValue.text,
                                 _groceryItemState.value.selectedCategory
                             )
                         }
@@ -131,7 +139,7 @@ class GroceryHomeScreenViewmodel @Inject constructor(
             is UiAction.OnInput -> {
                 _groceryItemState.update {
                     it.copy(
-                        title = uiAction.input
+                        textFieldValue = uiAction.input
                     )
                 }
             }
@@ -140,6 +148,7 @@ class GroceryHomeScreenViewmodel @Inject constructor(
                 viewModelScope.launch {
                     val grocItem = uiAction.groceryItem
                     updateGroceryItemUseCase.toggleCompletion(grocItem.id, !grocItem.isCompleted)
+                    clearAddState()
                 }
             }
 
@@ -147,7 +156,10 @@ class GroceryHomeScreenViewmodel @Inject constructor(
                 currentEditingItem = uiAction.groceryItem
                 _groceryItemState.update {
                     it.copy(
-                        title = currentEditingItem?.name.orEmpty(),
+                        textFieldValue = TextFieldValue(
+                            currentEditingItem?.name.orEmpty(),
+                            selection = TextRange(currentEditingItem?.name.orEmpty().length)
+                        ),
                         selectedCategory = currentEditingItem?.category,
                         isEditing = true
                     )
@@ -162,13 +174,81 @@ class GroceryHomeScreenViewmodel @Inject constructor(
                     )
                 }
             }
+
+            is UiAction.OnSort -> {
+                clearAddState()
+                _groceryListState.update { current ->
+                    current.copy(
+                        sortBy = uiAction.sortBy,
+                        displayList = sortList(
+                            current.displayList,
+                            uiAction.sortBy
+                        )
+                    )
+                }
+            }
+
+            is UiAction.OnCatFilter -> {
+                clearAddState()
+                _groceryListState.update { current ->
+                    current.copy(
+                        selectedCatFilter = uiAction.selectedCat,
+                        displayList = filterAndSort(
+                            current.groceryList,
+                            uiAction.selectedCat,
+                            current.sortBy
+                        )
+                    )
+                }
+            }
         }
     }
 
+    private fun sortList(
+        list: List<GroceryItem>,
+        sortBy: SortBy
+    ): List<GroceryItem> {
+        return when (sortBy) {
+            SortBy.Category ->
+                list.sortedBy { it.category?.name }
+
+            SortBy.DateAdded ->
+                list.sortedByDescending { it.dateAdded }
+
+            SortBy.Completed ->
+                list.sortedWith(
+                    compareBy<GroceryItem> { it.isCompleted }
+                        .thenByDescending { it.dateAdded }
+                )
+
+            SortBy.Alphabetically -> {
+                list.sortedBy { it.name }
+            }
+        }
+    }
+
+    private fun filterAndSort(
+        list: List<GroceryItem>,
+        categoryFilter: GroceryCategory,
+        sortBy: SortBy
+    ): List<GroceryItem> {
+        // First filter
+        val filtered = if (categoryFilter.name == DefaultCategories.All.name) {
+            list
+        } else {
+            list.filter { it.category?.name == categoryFilter.name }
+        }
+
+        // Then sort
+        return sortList(filtered, sortBy)
+    }
+
+
     private fun clearAddState() {
+        currentEditingItem = null
         _groceryItemState.update {
             it.copy(
-                title = "",
+                textFieldValue = TextFieldValue(),
                 selectedCategory = null,
                 isEditing = false
             )

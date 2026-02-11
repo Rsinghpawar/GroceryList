@@ -5,6 +5,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -42,11 +43,12 @@ fun SubtitleText(
 @Composable
 fun SectionHeader(
     text: String,
+    style : TextStyle = MaterialTheme.typography.titleMedium,
     modifier: Modifier = Modifier
 ) {
     Text(
         text = text,
-        style = MaterialTheme.typography.titleMedium,
+        style = style,
         fontWeight = FontWeight.SemiBold,
         color = MaterialTheme.colorScheme.onSurface,
         modifier = modifier

@@ -10,5 +10,6 @@
     <string name="update_item">Update Item</string>
     <string name="your_grocery_list_is_empty">Your grocery list is empty</string>
     <string name="add_items_above_to_get_started">Add items above to get started</string>
-    <string name="enter_grocery_item">Enter grocery item...</string>
+    <string name="enter_grocery_item">Enter grocery item…</string>
+    <string name="your_shopping_list">YOUR SHOPPING LIST</string>
 </resources>

@@ -9,13 +9,19 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -87,6 +93,47 @@ fun CircleCheckbox(
     }
 }
 
+
+@Composable
+fun <T> SimpleDropdown(
+    items: List<T>,
+    selectedItem: T,
+    expanded: Boolean,
+    onExpandedChange: (Boolean) -> Unit,
+    onItemSelected: (T) -> Unit,
+    itemLabel: (T) -> String,
+    icon: ImageVector,
+    iconTint: Color = LocalContentColor.current,
+    selectedColor: Color = MaterialTheme.colorScheme.tertiary
+) {
+    Box {
+        Icon(
+            imageVector = icon,
+            contentDescription = "dropdown",
+            tint = iconTint,
+            modifier = Modifier.clickable { onExpandedChange(!expanded) }
+        )
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { onExpandedChange(false) }
+        ) {
+            items.forEach { item ->
+                DropdownMenuItem(
+                    text = {
+                        Text(
+                            text = itemLabel(item),
+                            color = if (selectedItem == item) selectedColor else Color.Unspecified
+                        )
+                    },
+                    onClick = {
+                        onItemSelected(item)
+                        onExpandedChange(false)
+                    }
+                )
+            }
+        }
+    }
+}
 
 
 

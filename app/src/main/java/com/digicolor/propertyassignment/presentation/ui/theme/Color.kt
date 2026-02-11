@@ -4,9 +4,9 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 
 // Light theme
-val Purple40 = Color(0xFF6A4BC3)
+val Purple40 = Color(0xFF9C27B0)
 val PurpleGrey40 = Color(0xFF6B6480)
-val Pink40 = Color(0xFF8A5A6D)
+val Pink40 = Color(0xFFDE3D7F)
 
 // Dark theme
 val Purple80 = Color(0xFFC7B6FF)

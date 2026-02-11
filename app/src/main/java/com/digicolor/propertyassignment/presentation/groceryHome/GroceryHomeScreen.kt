@@ -33,9 +33,11 @@ import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -57,11 +59,15 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusEvent
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.digicolor.propertyassignment.R
 import com.digicolor.propertyassignment.domain.GroceryCategory
+import com.digicolor.propertyassignment.domain.GroceryItem
 import com.digicolor.propertyassignment.presentation.groceryHome.componenets.CategoryItem
 import com.digicolor.propertyassignment.presentation.groceryHome.componenets.CircularImage
 import com.digicolor.propertyassignment.presentation.groceryHome.componenets.EmptyGroceryList
@@ -74,6 +80,8 @@ import com.digicolor.propertyassignment.presentation.ui.theme.TitleLarge
 import com.digicolor.propertyassignment.presentation.ui.theme.LightPrimaryGradient
 import com.digicolor.propertyassignment.presentation.groceryHome.componenets.ActionIcon
 import com.digicolor.propertyassignment.presentation.groceryHome.componenets.SwipeableItemWithActions
+import com.digicolor.propertyassignment.util.SimpleDropdown
+import com.digicolor.propertyassignment.util.toComposeColor
 import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -102,7 +110,8 @@ fun GroceryHomeScreenContent(
             modifier = Modifier
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.background)
-                .padding(paddingValues),
+                .padding(paddingValues)
+                .imePadding(),
             contentPadding = PaddingValues(
                 bottom = 80.dp
             ),
@@ -132,8 +141,24 @@ fun GroceryHomeScreenContent(
                 )
             }
             if (groceryListState.groceryList.isNotEmpty()) {
-                items(groceryListState.groceryList, key = { it.id }) { groceryItem ->
+                item {
+                    YourShoppingList(
+                        size = groceryListState.groceryList.size,
+                        catList = groceryListState.categoryFilterList,
+                        selectedCat = groceryListState.selectedCatFilter,
+                        sortOptions = groceryListState.sortOptions,
+                        sortBy = groceryListState.sortBy,
+                        onSort = {
+                            uiAction(UiAction.OnSort(sortBy = it))
+                        },
+                        onCategorySelected = {
+                            uiAction(UiAction.OnCatFilter(selectedCat = it))
+                        }
+                    )
+                }
+                items(groceryListState.displayList, key = { it.id }) { groceryItem ->
                     SwipeableItemWithActions(
+                        modifier = Modifier.animateItem(),
                         isRevealed = groceryItem.id == revealedItemId,
                         actions = {
                             ActionIcon(
@@ -178,9 +203,7 @@ fun GroceryHomeScreenContent(
                 }
             } else {
                 item {
-                    EmptyGroceryList(
-
-                    )
+                    EmptyGroceryList()
                 }
             }
 
@@ -189,12 +212,93 @@ fun GroceryHomeScreenContent(
     }
 }
 
+@Composable
+fun CategoryFilter(newItemState: GroceryNewItemState, onCateFilterChange: (String) -> Unit) {
+    FlowRow(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = 14.dp, end = 14.dp, bottom = 12.dp),
+        maxLines = 1,
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        newItemState.categoryList.forEachIndexed { _, category ->
+            CategoryItem(
+                modifier = Modifier.weight(1f),
+                isSelected = newItemState.selectedCatFilter?.name == category.name,
+                onTap = {
+                    onCateFilterChange(category.name)
+                },
+                category = category
+            )
+        }
+    }
+}
+
+@Composable
+fun YourShoppingList(
+    size: Int,
+    catList: List<GroceryCategory>,
+    selectedCat: GroceryCategory,
+    sortOptions: List<SortBy>,
+    sortBy: SortBy,
+    onSort: (SortBy) -> Unit,
+    onCategorySelected: (GroceryCategory) -> Unit
+) {
+    var sortExpanded by remember { mutableStateOf(false) }
+    var categoryExpanded by remember { mutableStateOf(false) }
+
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 14.dp, vertical = 12.dp),
+    ) {
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                stringResource(R.string.your_shopping_list),
+                fontWeight = FontWeight.Bold,
+                color = Color(0xff9CA3AF)
+            )
+            Spacer(Modifier.weight(1f))
+            Text("$size Item(s)", color = MaterialTheme.colorScheme.primary, fontSize = 12.sp)
+
+            SimpleDropdown(
+                items = sortOptions,
+                selectedItem = sortBy,
+                expanded = sortExpanded,
+                onExpandedChange = { sortExpanded = it },
+                onItemSelected = onSort,
+                itemLabel = { it.name },
+                icon = Icons.AutoMirrored.Filled.List
+            )
+        }
+
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(selectedCat.name, color = selectedCat.bgColorHex.toComposeColor())
+
+            SimpleDropdown(
+                items = catList,
+                selectedItem = selectedCat,
+                expanded = categoryExpanded,
+                onExpandedChange = { categoryExpanded = it },
+                onItemSelected = onCategorySelected,
+                itemLabel = { it.name },
+                icon = Icons.Filled.PlayArrow,
+                iconTint = selectedCat.bgColorHex.toComposeColor()
+            )
+        }
+    }
+}
+
+
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun AddNewItemSection(
     newItemState: GroceryNewItemState,
-    onValueChange: (String) -> Unit,
+    onValueChange: (TextFieldValue) -> Unit,
     onCategoryChange: (String) -> Unit,
     onAddItem: () -> Unit,
     onResetEditingState: () -> Unit
@@ -206,16 +310,16 @@ fun AddNewItemSection(
 
     val focusRequester = remember { FocusRequester() }
 
+    LaunchedEffect(newItemState.isEditing) {
+        if (newItemState.isEditing) {
+            focusRequester.requestFocus()
+        }
+    }
+
     LaunchedEffect(isKeyboardOpen, isTextFieldFocused) {
         if (isKeyboardOpen && isTextFieldFocused) {
             delay(100)
             bringIntoViewRequester.bringIntoView()
-        }
-    }
-    LaunchedEffect(newItemState.isEditing) {
-        if (newItemState.isEditing) {
-            delay(100)
-            focusRequester.requestFocus()
         }
     }
 
@@ -244,7 +348,7 @@ fun AddNewItemSection(
                         .onFocusEvent { focusState ->
                             isTextFieldFocused = focusState.isFocused
                         },
-                    value = newItemState.title,
+                    value = newItemState.textFieldValue,
                     onValueChange = onValueChange,
                     placeholder = stringResource(R.string.enter_grocery_item),
                 )
@@ -314,7 +418,7 @@ fun AddNewItemGradientCTA(isEditing: Boolean, onReset: () -> Unit) {
                     12.dp,
                 ), brush = LightPrimaryGradient
             )
-            .padding(18.dp),
+            .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         AnimatedContent(
@@ -333,11 +437,12 @@ fun AddNewItemGradientCTA(isEditing: Boolean, onReset: () -> Unit) {
         }
         Spacer(Modifier.weight(1f))
         if (isEditing) {
-            Box(modifier = Modifier
-                .size(18.dp)
-                .clickable() {
-                    onReset()
-                }) {
+            Box(
+                modifier = Modifier
+                    .size(16.dp)
+                    .clickable() {
+                        onReset()
+                    }) {
                 Icon(
                     Icons.Filled.Clear,
                     contentDescription = null,
@@ -368,13 +473,13 @@ private fun GroceryHomeScreenPreview() {
         GroceryHomeScreenContent(
             GroceryListState(
                 listOf(
-                    /* GroceryItem(
-                         id = 1,
-                         name = "Testing",
-                         category = null,
-                         dateAdded = 1L,
-                         isCompleted = false,
-                     )*/
+                    GroceryItem(
+                        id = 1,
+                        name = "Testing",
+                        category = null,
+                        dateAdded = 1L,
+                        isCompleted = false,
+                    )
                 )
             ),
             GroceryNewItemState(

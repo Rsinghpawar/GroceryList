@@ -1,7 +1,16 @@
 import com.digicolor.propertyassignment.data.entity.CategoryEntity
 
 object DefaultCategories {
+    val All = CategoryEntity(
+        name = "All Items",
+        icon = "🛒",
+        textColorHex = "#644842",
+        bgColorHex = "#D5C7AA"
+    )
+
+
     val list = listOf<CategoryEntity>(
+        All,
         CategoryEntity(
             name = "Vegetables",
             icon = "🥕", // Updated from 🍆 (comment) to match your icon style
@@ -33,12 +42,12 @@ object DefaultCategories {
             bgColorHex = "#A0CED9"
         )
     )
-
-    // A balanced Slate/Grey theme to represent "Empty/Unknown"
     val NoCategory = CategoryEntity(
         name = "None",
         icon = "❔",
         textColorHex = "#64748B",
         bgColorHex = "#F1F5F9"
     )
+
+
 }

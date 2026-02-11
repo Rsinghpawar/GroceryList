@@ -1,5 +1,7 @@
 package com.digicolor.propertyassignment.presentation.groceryHome
 
+import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.digicolor.propertyassignment.domain.GroceryCategory
@@ -98,14 +100,14 @@ class GroceryHomeScreenViewmodel @Inject constructor(
                             currentEditingItem?.let { item ->
                                 updateGroceryItemUseCase.updateItem(
                                     grocId = item.id,
-                                    name = _groceryItemState.value.title,
+                                    name = _groceryItemState.value.textFieldValue.text,
                                     categoryId = _groceryItemState.value.selectedCategory?.name
                                 )
                             }
 
                         } else {
                             addGroceryItemUseCase.invoke(
-                                _groceryItemState.value.title,
+                                _groceryItemState.value.textFieldValue.text,
                                 _groceryItemState.value.selectedCategory
                             )
                         }
@@ -137,7 +139,7 @@ class GroceryHomeScreenViewmodel @Inject constructor(
             is UiAction.OnInput -> {
                 _groceryItemState.update {
                     it.copy(
-                        title = uiAction.input
+                        textFieldValue = uiAction.input
                     )
                 }
             }
@@ -154,7 +156,10 @@ class GroceryHomeScreenViewmodel @Inject constructor(
                 currentEditingItem = uiAction.groceryItem
                 _groceryItemState.update {
                     it.copy(
-                        title = currentEditingItem?.name.orEmpty(),
+                        textFieldValue = TextFieldValue(
+                            currentEditingItem?.name.orEmpty(),
+                            selection = TextRange(currentEditingItem?.name.orEmpty().length)
+                        ),
                         selectedCategory = currentEditingItem?.category,
                         isEditing = true
                     )
@@ -240,9 +245,10 @@ class GroceryHomeScreenViewmodel @Inject constructor(
 
 
     private fun clearAddState() {
+        currentEditingItem = null
         _groceryItemState.update {
             it.copy(
-                title = "",
+                textFieldValue = TextFieldValue(),
                 selectedCategory = null,
                 isEditing = false
             )

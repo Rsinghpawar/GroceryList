@@ -60,6 +60,7 @@ import androidx.compose.ui.focus.onFocusEvent
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -297,7 +298,7 @@ fun YourShoppingList(
 @Composable
 fun AddNewItemSection(
     newItemState: GroceryNewItemState,
-    onValueChange: (String) -> Unit,
+    onValueChange: (TextFieldValue) -> Unit,
     onCategoryChange: (String) -> Unit,
     onAddItem: () -> Unit,
     onResetEditingState: () -> Unit
@@ -309,16 +310,16 @@ fun AddNewItemSection(
 
     val focusRequester = remember { FocusRequester() }
 
+    LaunchedEffect(newItemState.isEditing) {
+        if (newItemState.isEditing) {
+            focusRequester.requestFocus()
+        }
+    }
+
     LaunchedEffect(isKeyboardOpen, isTextFieldFocused) {
         if (isKeyboardOpen && isTextFieldFocused) {
             delay(100)
             bringIntoViewRequester.bringIntoView()
-        }
-    }
-    LaunchedEffect(newItemState.isEditing) {
-        if (newItemState.isEditing) {
-            delay(100)
-            focusRequester.requestFocus()
         }
     }
 
@@ -347,7 +348,7 @@ fun AddNewItemSection(
                         .onFocusEvent { focusState ->
                             isTextFieldFocused = focusState.isFocused
                         },
-                    value = newItemState.title,
+                    value = newItemState.textFieldValue,
                     onValueChange = onValueChange,
                     placeholder = stringResource(R.string.enter_grocery_item),
                 )

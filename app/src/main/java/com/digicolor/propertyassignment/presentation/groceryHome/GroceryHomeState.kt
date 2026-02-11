@@ -1,18 +1,19 @@
 package com.digicolor.propertyassignment.presentation.groceryHome
 
+import androidx.compose.ui.text.input.TextFieldValue
 import com.digicolor.propertyassignment.data.mappers.toDomain
 import com.digicolor.propertyassignment.domain.GroceryCategory
 import com.digicolor.propertyassignment.domain.GroceryItem
 
 data class GroceryNewItemState(
-    val title: String = "",
+    val textFieldValue : TextFieldValue = TextFieldValue(),
     val selectedCategory: GroceryCategory? = null,
     val isEditing: Boolean = false,
     val categoryList: List<GroceryCategory> = emptyList(),
     val selectedCatFilter : GroceryCategory?=null
 ) {
     val isAddButtonEnabled: Boolean
-        get() = title.isNotEmpty()
+        get() = textFieldValue.text.isNotEmpty()
 }
 
 data class GroceryListState(
@@ -41,7 +42,7 @@ sealed interface UiAction {
     data class OnDelete(val id: Int) : UiAction
 
     data class OnEditIntent(val groceryItem: GroceryItem) : UiAction
-    data class OnInput(val input: String) : UiAction
+    data class OnInput(val input: TextFieldValue) : UiAction
     data class OnCategoryChange(val catID: String) : UiAction
     data class OnGroceryCheck(val groceryItem: GroceryItem) : UiAction
     data class OnSort(val sortBy: SortBy) : UiAction

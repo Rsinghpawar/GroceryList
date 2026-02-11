@@ -21,10 +21,14 @@ private val LightColorScheme = lightColorScheme(
 
 private val DarkColorScheme = darkColorScheme(
     primary = Purple80,
+    onPrimary = Color(0xFF000000),
+    primaryContainer = Color(0xFF3700B3),
     secondary = PurpleGrey80,
     tertiary = Pink80,
     background = DarkPrimaryBackground,
-    surface = Color(0xFFA9A4A4)
+    surface = Color(0xFF2B2B2B),
+    onSurface = Color(0xFFE1E1E1),
+    onBackground = Color(0xFFE1E1E1),
 )
 
 
@@ -32,7 +36,7 @@ private val DarkColorScheme = darkColorScheme(
 fun PropertyAssignmentTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     // Dynamic color is available on Android 12+
-    dynamicColor: Boolean = true,
+    dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {

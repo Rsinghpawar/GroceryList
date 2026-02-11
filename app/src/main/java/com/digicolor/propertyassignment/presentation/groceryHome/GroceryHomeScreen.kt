@@ -166,7 +166,7 @@ fun GroceryHomeScreenContent(
                                     uiAction(UiAction.OnDelete(groceryItem.id))
                                     revealedItemId = null
                                 },
-                                backgroundColor = MaterialTheme.colorScheme.surface,
+                                backgroundColor = MaterialTheme.colorScheme.background,
                                 icon = Icons.Default.Delete,
                                 tint = MaterialTheme.colorScheme.error,
                                 modifier = Modifier.fillMaxHeight(),
@@ -176,7 +176,7 @@ fun GroceryHomeScreenContent(
                                     uiAction(UiAction.OnEditIntent(groceryItem))
                                     revealedItemId = null
                                 },
-                                backgroundColor = MaterialTheme.colorScheme.surface,
+                                backgroundColor = MaterialTheme.colorScheme.background,
                                 icon = Icons.Default.Edit,
                                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.fillMaxHeight()

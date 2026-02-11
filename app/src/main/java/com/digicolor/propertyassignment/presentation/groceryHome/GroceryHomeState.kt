@@ -14,8 +14,18 @@ data class GroceryNewItemState(
 }
 
 data class GroceryListState(
-    val groceryList: List<GroceryItem> = emptyList()
-)
+    val groceryList: List<GroceryItem> = emptyList(),
+    val sortBy: SortBy = SortBy.Completed,
+    val sortOptions : List<SortBy> = SortBy.entries.toList(),
+    val sortedGroceryList: List<GroceryItem> = emptyList(),
+
+    )
+
+enum class SortBy{
+    Completed,
+    Category,
+    DateAdded
+}
 
 
 sealed interface UiAction {
@@ -25,13 +35,10 @@ sealed interface UiAction {
 
     data class OnDelete(val id: Int) : UiAction
 
-    data class OnEditItem(val id: Int) : UiAction
-
     data class OnEditIntent(val groceryItem: GroceryItem) : UiAction
-
-    data class OnMarkCompleted(val id: Int) : UiAction
     data class OnInput(val input: String) : UiAction
     data class OnCategoryChange(val catID: String) : UiAction
     data class OnGroceryCheck(val groceryItem: GroceryItem) : UiAction
+    data class OnSort(val sortBy: SortBy) : UiAction
 
 }

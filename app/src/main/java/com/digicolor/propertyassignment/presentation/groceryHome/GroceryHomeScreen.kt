@@ -33,12 +33,15 @@ import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -57,11 +60,14 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusEvent
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.digicolor.propertyassignment.R
 import com.digicolor.propertyassignment.domain.GroceryCategory
+import com.digicolor.propertyassignment.domain.GroceryItem
 import com.digicolor.propertyassignment.presentation.groceryHome.componenets.CategoryItem
 import com.digicolor.propertyassignment.presentation.groceryHome.componenets.CircularImage
 import com.digicolor.propertyassignment.presentation.groceryHome.componenets.EmptyGroceryList
@@ -103,8 +109,7 @@ fun GroceryHomeScreenContent(
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.background)
                 .padding(paddingValues)
-                .imePadding()
-            ,
+                .imePadding(),
             contentPadding = PaddingValues(
                 bottom = 80.dp
             ),
@@ -134,8 +139,19 @@ fun GroceryHomeScreenContent(
                 )
             }
             if (groceryListState.groceryList.isNotEmpty()) {
-                items(groceryListState.groceryList, key = { it.id }) { groceryItem ->
+                item {
+                    YourShoppingList(
+                        size = groceryListState.groceryList.size,
+                        sortOptions = groceryListState.sortOptions,
+                        sortBy = groceryListState.sortBy,
+                        onSort = {
+                            uiAction(UiAction.OnSort(sortBy = it))
+                        }
+                    )
+                }
+                items(groceryListState.sortedGroceryList, key = { it.id }) { groceryItem ->
                     SwipeableItemWithActions(
+                        modifier = Modifier.animateItem(),
                         isRevealed = groceryItem.id == revealedItemId,
                         actions = {
                             ActionIcon(
@@ -188,6 +204,64 @@ fun GroceryHomeScreenContent(
 
         }
 
+    }
+}
+
+@Composable
+fun YourShoppingList(
+    size: Int,
+    sortOptions: List<SortBy>,
+    sortBy: SortBy,
+    onSort: (SortBy) -> Unit
+) {
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 14.dp, vertical = 12.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        var expanded by remember { mutableStateOf(false) }
+        Text(
+            stringResource(R.string.your_shopping_list),
+            fontWeight = FontWeight.Bold,
+            color = Color(0xff9CA3AF)
+        )
+        Spacer(Modifier.weight(1f))
+        Text("$size Item(s)", color = MaterialTheme.colorScheme.primary, fontSize = 12.sp)
+        Box {
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.List,
+                contentDescription = "filter",
+                modifier = Modifier
+                    .padding(end = 4.dp)
+                    .clickable {
+                        expanded = !expanded
+                    }
+            )
+            DropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false }
+            ) {
+                sortOptions.forEach { filterOption ->
+                    DropdownMenuItem(
+                        text = {
+                            if (sortBy == filterOption) {
+                                Text(filterOption.name, color = MaterialTheme.colorScheme.primary)
+                            } else {
+                                Text(filterOption.name)
+
+                            }
+
+                        },
+                        onClick = {
+                            onSort(filterOption)
+                            expanded = false
+                        }
+                    )
+                }
+            }
+        }
     }
 }
 
@@ -335,11 +409,12 @@ fun AddNewItemGradientCTA(isEditing: Boolean, onReset: () -> Unit) {
         }
         Spacer(Modifier.weight(1f))
         if (isEditing) {
-            Box(modifier = Modifier
-                .size(18.dp)
-                .clickable() {
-                    onReset()
-                }) {
+            Box(
+                modifier = Modifier
+                    .size(18.dp)
+                    .clickable() {
+                        onReset()
+                    }) {
                 Icon(
                     Icons.Filled.Clear,
                     contentDescription = null,
@@ -370,13 +445,13 @@ private fun GroceryHomeScreenPreview() {
         GroceryHomeScreenContent(
             GroceryListState(
                 listOf(
-                    /* GroceryItem(
-                         id = 1,
-                         name = "Testing",
-                         category = null,
-                         dateAdded = 1L,
-                         isCompleted = false,
-                     )*/
+                    GroceryItem(
+                        id = 1,
+                        name = "Testing",
+                        category = null,
+                        dateAdded = 1L,
+                        isCompleted = false,
+                    )
                 )
             ),
             GroceryNewItemState(

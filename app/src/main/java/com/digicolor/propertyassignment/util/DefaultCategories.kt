@@ -33,8 +33,6 @@ object DefaultCategories {
             bgColorHex = "#A0CED9"
         )
     )
-
-    // A balanced Slate/Grey theme to represent "Empty/Unknown"
     val NoCategory = CategoryEntity(
         name = "None",
         icon = "❔",

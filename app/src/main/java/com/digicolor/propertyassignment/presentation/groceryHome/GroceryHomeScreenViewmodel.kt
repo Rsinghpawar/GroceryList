@@ -60,9 +60,12 @@ class GroceryHomeScreenViewmodel @Inject constructor(
     private fun observeGroceryList() {
         viewModelScope.launch {
             observeGroceryListUseCase().collect { groceryItemList ->
-                _groceryListState.update {
-                    it.copy(
-                        groceryList = groceryItemList
+
+                _groceryListState.update { current ->
+                    val sorted = sortList(groceryItemList, current.sortBy)
+                    current.copy(
+                        groceryList = groceryItemList,
+                        sortedGroceryList = sorted
                     )
                 }
             }
@@ -75,14 +78,7 @@ class GroceryHomeScreenViewmodel @Inject constructor(
                 viewModelScope.launch {
                     updateGroceryItemUseCase.deleteItem(uiAction.id)
                 }
-            }
-
-            is UiAction.OnEditItem -> {
-
-            }
-
-            is UiAction.OnMarkCompleted -> {
-
+                clearAddState()
             }
 
             is UiAction.OnAddNewItem -> {
@@ -162,8 +158,38 @@ class GroceryHomeScreenViewmodel @Inject constructor(
                     )
                 }
             }
+
+            is UiAction.OnSort -> {
+                _groceryListState.update { current ->
+                    val sorted = sortList(current.groceryList, uiAction.sortBy)
+                    current.copy(
+                        sortBy = uiAction.sortBy,
+                        sortedGroceryList = sorted
+                    )
+                }
+            }
         }
     }
+
+    private fun sortList(
+        list: List<GroceryItem>,
+        sortBy: SortBy
+    ): List<GroceryItem> {
+        return when (sortBy) {
+            SortBy.Category ->
+                list.sortedBy { it.category?.name }
+
+            SortBy.DateAdded ->
+                list.sortedByDescending { it.dateAdded }
+
+            SortBy.Completed ->
+                list.sortedWith(
+                    compareBy<GroceryItem> { it.isCompleted }
+                        .thenByDescending { it.dateAdded }
+                )
+        }
+    }
+
 
     private fun clearAddState() {
         _groceryItemState.update {

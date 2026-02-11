@@ -102,7 +102,9 @@ fun GroceryHomeScreenContent(
             modifier = Modifier
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.background)
-                .padding(paddingValues),
+                .padding(paddingValues)
+                .imePadding()
+            ,
             contentPadding = PaddingValues(
                 bottom = 80.dp
             ),

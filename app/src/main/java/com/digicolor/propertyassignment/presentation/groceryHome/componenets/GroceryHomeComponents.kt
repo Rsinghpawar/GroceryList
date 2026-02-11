@@ -138,6 +138,42 @@ fun CategoryItem(
 
 
 @Composable
+fun CategoryItemSmall(
+    modifier: Modifier = Modifier,
+    isSelected: Boolean,
+    category: GroceryCategory,
+    onTap: (() -> Unit)?
+) {
+    Row(
+        modifier = modifier
+            .background(
+                shape = RoundedCornerShape(50),
+                color = if (isSelected) Color.Blue else category.bgColorHex.toComposeColor()
+            )
+            .padding(vertical = 12.dp, horizontal = 6.dp)
+            .clickable {
+                onTap?.invoke()
+            },
+        horizontalArrangement = Arrangement.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Text(text = category.icon)
+            CategoryLabel(
+                category.name,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                textColor = category.textColorHex.toComposeColor()
+            )
+
+        }
+    }
+}
+
+
+@Composable
 fun GroceryTextField(
     value: String,
     onValueChange: (String) -> Unit,

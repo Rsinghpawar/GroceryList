@@ -37,11 +37,10 @@ import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -80,6 +79,8 @@ import com.digicolor.propertyassignment.presentation.ui.theme.TitleLarge
 import com.digicolor.propertyassignment.presentation.ui.theme.LightPrimaryGradient
 import com.digicolor.propertyassignment.presentation.groceryHome.componenets.ActionIcon
 import com.digicolor.propertyassignment.presentation.groceryHome.componenets.SwipeableItemWithActions
+import com.digicolor.propertyassignment.util.SimpleDropdown
+import com.digicolor.propertyassignment.util.toComposeColor
 import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -142,14 +143,19 @@ fun GroceryHomeScreenContent(
                 item {
                     YourShoppingList(
                         size = groceryListState.groceryList.size,
+                        catList = groceryListState.categoryFilterList,
+                        selectedCat = groceryListState.selectedCatFilter,
                         sortOptions = groceryListState.sortOptions,
                         sortBy = groceryListState.sortBy,
                         onSort = {
                             uiAction(UiAction.OnSort(sortBy = it))
+                        },
+                        onCategorySelected = {
+                            uiAction(UiAction.OnCatFilter(selectedCat = it))
                         }
                     )
                 }
-                items(groceryListState.sortedGroceryList, key = { it.id }) { groceryItem ->
+                items(groceryListState.displayList, key = { it.id }) { groceryItem ->
                     SwipeableItemWithActions(
                         modifier = Modifier.animateItem(),
                         isRevealed = groceryItem.id == revealedItemId,
@@ -196,9 +202,7 @@ fun GroceryHomeScreenContent(
                 }
             } else {
                 item {
-                    EmptyGroceryList(
-
-                    )
+                    EmptyGroceryList()
                 }
             }
 
@@ -208,62 +212,85 @@ fun GroceryHomeScreenContent(
 }
 
 @Composable
-fun YourShoppingList(
-    size: Int,
-    sortOptions: List<SortBy>,
-    sortBy: SortBy,
-    onSort: (SortBy) -> Unit
-) {
-    Row(
-        Modifier
+fun CategoryFilter(newItemState: GroceryNewItemState, onCateFilterChange: (String) -> Unit) {
+    FlowRow(
+        modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 14.dp, vertical = 12.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-        verticalAlignment = Alignment.CenterVertically
+            .padding(start = 14.dp, end = 14.dp, bottom = 12.dp),
+        maxLines = 1,
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        var expanded by remember { mutableStateOf(false) }
-        Text(
-            stringResource(R.string.your_shopping_list),
-            fontWeight = FontWeight.Bold,
-            color = Color(0xff9CA3AF)
-        )
-        Spacer(Modifier.weight(1f))
-        Text("$size Item(s)", color = MaterialTheme.colorScheme.primary, fontSize = 12.sp)
-        Box {
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.List,
-                contentDescription = "filter",
-                modifier = Modifier
-                    .padding(end = 4.dp)
-                    .clickable {
-                        expanded = !expanded
-                    }
+        newItemState.categoryList.forEachIndexed { _, category ->
+            CategoryItem(
+                modifier = Modifier.weight(1f),
+                isSelected = newItemState.selectedCatFilter?.name == category.name,
+                onTap = {
+                    onCateFilterChange(category.name)
+                },
+                category = category
             )
-            DropdownMenu(
-                expanded = expanded,
-                onDismissRequest = { expanded = false }
-            ) {
-                sortOptions.forEach { filterOption ->
-                    DropdownMenuItem(
-                        text = {
-                            if (sortBy == filterOption) {
-                                Text(filterOption.name, color = MaterialTheme.colorScheme.primary)
-                            } else {
-                                Text(filterOption.name)
-
-                            }
-
-                        },
-                        onClick = {
-                            onSort(filterOption)
-                            expanded = false
-                        }
-                    )
-                }
-            }
         }
     }
 }
+
+@Composable
+fun YourShoppingList(
+    size: Int,
+    catList: List<GroceryCategory>,
+    selectedCat: GroceryCategory,
+    sortOptions: List<SortBy>,
+    sortBy: SortBy,
+    onSort: (SortBy) -> Unit,
+    onCategorySelected: (GroceryCategory) -> Unit
+) {
+    var sortExpanded by remember { mutableStateOf(false) }
+    var categoryExpanded by remember { mutableStateOf(false) }
+
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 14.dp, vertical = 12.dp),
+    ) {
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                stringResource(R.string.your_shopping_list),
+                fontWeight = FontWeight.Bold,
+                color = Color(0xff9CA3AF)
+            )
+            Spacer(Modifier.weight(1f))
+            Text("$size Item(s)", color = MaterialTheme.colorScheme.primary, fontSize = 12.sp)
+
+            SimpleDropdown(
+                items = sortOptions,
+                selectedItem = sortBy,
+                expanded = sortExpanded,
+                onExpandedChange = { sortExpanded = it },
+                onItemSelected = onSort,
+                itemLabel = { it.name },
+                icon = Icons.AutoMirrored.Filled.List
+            )
+        }
+
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(selectedCat.name, color = selectedCat.bgColorHex.toComposeColor())
+
+            SimpleDropdown(
+                items = catList,
+                selectedItem = selectedCat,
+                expanded = categoryExpanded,
+                onExpandedChange = { categoryExpanded = it },
+                onItemSelected = onCategorySelected,
+                itemLabel = { it.name },
+                icon = Icons.Filled.PlayArrow,
+                iconTint = selectedCat.bgColorHex.toComposeColor()
+            )
+        }
+    }
+}
+
 
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -390,7 +417,7 @@ fun AddNewItemGradientCTA(isEditing: Boolean, onReset: () -> Unit) {
                     12.dp,
                 ), brush = LightPrimaryGradient
             )
-            .padding(18.dp),
+            .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         AnimatedContent(
@@ -411,7 +438,7 @@ fun AddNewItemGradientCTA(isEditing: Boolean, onReset: () -> Unit) {
         if (isEditing) {
             Box(
                 modifier = Modifier
-                    .size(18.dp)
+                    .size(16.dp)
                     .clickable() {
                         onReset()
                     }) {

@@ -2,6 +2,7 @@ package com.digicolor.propertyassignment.presentation.groceryHome
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.digicolor.propertyassignment.domain.GroceryCategory
 import com.digicolor.propertyassignment.domain.GroceryItem
 import com.digicolor.propertyassignment.domain.usecases.AddGroceryItemUseCase
 import com.digicolor.propertyassignment.domain.usecases.GetCategoriesUseCase
@@ -42,7 +43,12 @@ class GroceryHomeScreenViewmodel @Inject constructor(
             getCategoriesUseCase().collect { categories ->
                 _groceryItemState.update {
                     it.copy(
-                        categoryList = categories
+                        categoryList = categories.filter { it.name!= DefaultCategories.All.name },
+                    )
+                }
+                _groceryListState.update {
+                    it.copy(
+                        categoryFilterList = categories
                     )
                 }
             }
@@ -58,14 +64,18 @@ class GroceryHomeScreenViewmodel @Inject constructor(
     }
 
     private fun observeGroceryList() {
+        clearAddState()
         viewModelScope.launch {
             observeGroceryListUseCase().collect { groceryItemList ->
-
                 _groceryListState.update { current ->
-                    val sorted = sortList(groceryItemList, current.sortBy)
+                    val displayList = filterAndSort(
+                        groceryItemList,
+                        categoryFilter = current.selectedCatFilter,
+                        sortBy = current.sortBy
+                    )
                     current.copy(
                         groceryList = groceryItemList,
-                        sortedGroceryList = sorted
+                        displayList = displayList
                     )
                 }
             }
@@ -136,6 +146,7 @@ class GroceryHomeScreenViewmodel @Inject constructor(
                 viewModelScope.launch {
                     val grocItem = uiAction.groceryItem
                     updateGroceryItemUseCase.toggleCompletion(grocItem.id, !grocItem.isCompleted)
+                    clearAddState()
                 }
             }
 
@@ -160,11 +171,28 @@ class GroceryHomeScreenViewmodel @Inject constructor(
             }
 
             is UiAction.OnSort -> {
+                clearAddState()
                 _groceryListState.update { current ->
-                    val sorted = sortList(current.groceryList, uiAction.sortBy)
                     current.copy(
                         sortBy = uiAction.sortBy,
-                        sortedGroceryList = sorted
+                        displayList = sortList(
+                            current.displayList,
+                            uiAction.sortBy
+                        )
+                    )
+                }
+            }
+
+            is UiAction.OnCatFilter -> {
+                clearAddState()
+                _groceryListState.update { current ->
+                    current.copy(
+                        selectedCatFilter = uiAction.selectedCat,
+                        displayList = filterAndSort(
+                            current.groceryList,
+                            uiAction.selectedCat,
+                            current.sortBy
+                        )
                     )
                 }
             }
@@ -187,7 +215,27 @@ class GroceryHomeScreenViewmodel @Inject constructor(
                     compareBy<GroceryItem> { it.isCompleted }
                         .thenByDescending { it.dateAdded }
                 )
+
+            SortBy.Alphabetically -> {
+                list.sortedBy { it.name }
+            }
         }
+    }
+
+    private fun filterAndSort(
+        list: List<GroceryItem>,
+        categoryFilter: GroceryCategory,
+        sortBy: SortBy
+    ): List<GroceryItem> {
+        // First filter
+        val filtered = if (categoryFilter.name == DefaultCategories.All.name) {
+            list
+        } else {
+            list.filter { it.category?.name == categoryFilter.name }
+        }
+
+        // Then sort
+        return sortList(filtered, sortBy)
     }
 
 

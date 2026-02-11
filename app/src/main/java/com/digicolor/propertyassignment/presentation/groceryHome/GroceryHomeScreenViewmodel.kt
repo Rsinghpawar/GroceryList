@@ -1,0 +1,179 @@
+package com.digicolor.propertyassignment.presentation.groceryHome
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.digicolor.propertyassignment.domain.GroceryItem
+import com.digicolor.propertyassignment.domain.usecases.AddGroceryItemUseCase
+import com.digicolor.propertyassignment.domain.usecases.GetCategoriesUseCase
+import com.digicolor.propertyassignment.domain.usecases.ObserveGroceryListUseCase
+import com.digicolor.propertyassignment.domain.usecases.UpdateGroceryItemUseCase
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import javax.inject.Inject
+
+@HiltViewModel
+class GroceryHomeScreenViewmodel @Inject constructor(
+    private val observeGroceryListUseCase: ObserveGroceryListUseCase,
+    private val addGroceryItemUseCase: AddGroceryItemUseCase,
+    private val getCategoriesUseCase: GetCategoriesUseCase,
+    private val updateGroceryItemUseCase: UpdateGroceryItemUseCase,
+
+    ) : ViewModel() {
+
+    private val _groceryListState = MutableStateFlow(GroceryListState())
+    val groceryListState = _groceryListState.asStateFlow()
+
+    private val _groceryItemState = MutableStateFlow(GroceryNewItemState())
+    val groceryItemState = _groceryItemState.asStateFlow()
+
+    private var currentEditingItem: GroceryItem? = null
+
+    init {
+        getCategories()
+        observeGroceryList()
+    }
+
+    private fun getCategories() {
+        viewModelScope.launch {
+            getCategoriesUseCase().collect { categories ->
+                _groceryItemState.update {
+                    it.copy(
+                        categoryList = categories
+                    )
+                }
+            }
+        }
+    }
+
+    private fun addDummyData() {
+        viewModelScope.launch(Dispatchers.IO) {
+            addGroceryItemUseCase("Testing")
+//            addGroceryItemUseCase("Oat Milk", GroceryCategory.Milk)
+//            addGroceryItemUseCase("Chicken", GroceryCategory.Meats)
+        }
+    }
+
+    private fun observeGroceryList() {
+        viewModelScope.launch {
+            observeGroceryListUseCase().collect { groceryItemList ->
+                _groceryListState.update {
+                    it.copy(
+                        groceryList = groceryItemList
+                    )
+                }
+            }
+        }
+    }
+
+    fun onAction(uiAction: UiAction) {
+        when (uiAction) {
+            is UiAction.OnDelete -> {
+                viewModelScope.launch {
+                    updateGroceryItemUseCase.deleteItem(uiAction.id)
+                }
+            }
+
+            is UiAction.OnEditItem -> {
+
+            }
+
+            is UiAction.OnMarkCompleted -> {
+
+            }
+
+            is UiAction.OnAddNewItem -> {
+                if (_groceryItemState.value.isAddButtonEnabled) {
+                    viewModelScope.launch {
+                        if (_groceryItemState.value.isEditing) {
+                            currentEditingItem?.let { item ->
+                                updateGroceryItemUseCase.updateItem(
+                                    grocId = item.id,
+                                    name = _groceryItemState.value.title,
+                                    categoryId = _groceryItemState.value.selectedCategory?.name
+                                )
+                            }
+
+                        } else {
+                            addGroceryItemUseCase.invoke(
+                                _groceryItemState.value.title,
+                                _groceryItemState.value.selectedCategory
+                            )
+                        }
+
+                        clearAddState()
+                    }
+
+                }
+            }
+
+            is UiAction.OnCategoryChange -> {
+                val selectedCat = _groceryItemState.value.selectedCategory
+                val newCat = _groceryItemState.value.categoryList.find { it.name == uiAction.catID }
+                if (selectedCat?.name == newCat?.name) {
+                    _groceryItemState.update {
+                        it.copy(
+                            selectedCategory = null
+                        )
+                    }
+                } else {
+                    _groceryItemState.update { it ->
+                        it.copy(
+                            selectedCategory = it.categoryList.find { it.name == uiAction.catID }
+                        )
+                    }
+                }
+            }
+
+            is UiAction.OnInput -> {
+                _groceryItemState.update {
+                    it.copy(
+                        title = uiAction.input
+                    )
+                }
+            }
+
+            is UiAction.OnGroceryCheck -> {
+                viewModelScope.launch {
+                    val grocItem = uiAction.groceryItem
+                    updateGroceryItemUseCase.toggleCompletion(grocItem.id, !grocItem.isCompleted)
+                }
+            }
+
+            is UiAction.OnEditIntent -> {
+                currentEditingItem = uiAction.groceryItem
+                _groceryItemState.update {
+                    it.copy(
+                        title = currentEditingItem?.name.orEmpty(),
+                        selectedCategory = currentEditingItem?.category,
+                        isEditing = true
+                    )
+                }
+            }
+
+            UiAction.OnResetEditingState -> {
+                currentEditingItem = null
+                _groceryItemState.update {
+                    it.copy(
+                        isEditing = false
+                    )
+                }
+            }
+        }
+    }
+
+    private fun clearAddState() {
+        _groceryItemState.update {
+            it.copy(
+                title = "",
+                selectedCategory = null,
+                isEditing = false
+            )
+        }
+    }
+
+
+}

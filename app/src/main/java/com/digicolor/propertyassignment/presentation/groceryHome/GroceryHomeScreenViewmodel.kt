@@ -57,14 +57,6 @@ class GroceryHomeScreenViewmodel @Inject constructor(
         }
     }
 
-    private fun addDummyData() {
-        viewModelScope.launch(Dispatchers.IO) {
-            addGroceryItemUseCase("Testing")
-//            addGroceryItemUseCase("Oat Milk", GroceryCategory.Milk)
-//            addGroceryItemUseCase("Chicken", GroceryCategory.Meats)
-        }
-    }
-
     private fun observeGroceryList() {
         clearAddState()
         viewModelScope.launch {

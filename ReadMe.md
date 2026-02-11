@@ -16,7 +16,8 @@ A modern, robust Android application built with Jetpack Compose that demonstrate
     - User can mark items as completed
     - List can be filtered by category or show all items
     - List can be sorted by category, completion and more
-    - 
+    - The app also works well with Dark Theme
+      
 - **Known Issues(In progress)**: On Edit the textfield does gain focus but the keyboard sometimes does not show up, this is a known issue with Jetpack Compose
 - Performance can further be optimized.
 

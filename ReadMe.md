@@ -2,7 +2,15 @@
 
 A modern, robust Android application built with Jetpack Compose that demonstrates professional software engineering practices, including Clean Architecture, MVVM, and reactive programming.
 
+<div align="center">
 
+| | | |
+|:---:|:---:|:---:|
+| <img src="https://github.com/user-attachments/assets/ce68ab85-d857-43be-8fb3-c31a9f7178ec" width="250"/> | <img src="https://github.com/user-attachments/assets/0ada18f8-dd2e-427b-9634-b685369581d3" width="250"/> | <img src="https://github.com/user-attachments/assets/b0b88f7b-5e03-4bcb-bfec-8ba2d15c6290" width="250"/> |
+| <img src="https://github.com/user-attachments/assets/f052cc1a-0bba-4d90-8930-c5ec1603631c" width="250"/> | <img src="https://github.com/user-attachments/assets/91d2143c-493d-4d8f-a146-c9b9d6c96962" width="250"/> | <img src="https://github.com/user-attachments/assets/e746d029-26b6-41b9-a7e1-5f6b2626cb16" width="250"/> |
+| <img src="https://github.com/user-attachments/assets/faf8acaa-c61c-42fd-aac2-270be6135400" width="250"/> | <img src="https://github.com/user-attachments/assets/f40ea7c9-9338-4404-82af-c03c09380258" width="250"/> | <img src="https://github.com/user-attachments/assets/0c783a54-8107-4072-b6d2-9969102257fe" width="250"/> |
+
+</div>
 
 
 
